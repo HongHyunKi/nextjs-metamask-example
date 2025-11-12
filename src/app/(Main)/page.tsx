@@ -10,21 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-
-// 네트워크 설정
-const NETWORKS = [
-  { chainId: '0x1', name: 'Ethereum Mainnet', symbol: 'ETH' },
-  { chainId: '0xaa36a7', name: 'Sepolia Testnet', symbol: 'SepoliaETH' },
-  { chainId: '0x89', name: 'Polygon Mainnet', symbol: 'MATIC' },
-  { chainId: '0x13882', name: 'Polygon Amoy Testnet', symbol: 'MATIC' },
-  { chainId: '0xa4b1', name: 'Arbitrum One', symbol: 'ETH' },
-  { chainId: '0xa4ba', name: 'Arbitrum Sepolia', symbol: 'ETH' },
-] as const;
+import { NETWORK_CONFIGS } from '@/constants/networks';
+import { getNetworkNameByChainId } from '@/utils/networks';
 
 export default function MainPage() {
   const {
     account,
     balance,
+    symbol,
     chainId,
     signature,
     signedMessage,
@@ -41,12 +34,6 @@ export default function MainPage() {
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
-
-  const getNetworkName = (chainId: string | null) => {
-    if (!chainId) return 'Not connected';
-    const network = NETWORKS.find((n) => n.chainId === chainId);
-    return network ? network.name : `Unknown (${chainId})`;
   };
 
   return (
@@ -84,7 +71,7 @@ export default function MainPage() {
                 <div className="flex items-center justify-between">
                   <div className="text-2xl font-bold">
                     {balance
-                      ? `${parseFloat(balance).toFixed(4)} ETH`
+                      ? `${parseFloat(balance).toFixed(4)} ${symbol || 'ETH'}`
                       : 'Loading...'}
                   </div>
                   <Button variant="outline" size="sm" onClick={refreshBalance}>
@@ -100,7 +87,7 @@ export default function MainPage() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold">
-                      {getNetworkName(chainId)}
+                      {getNetworkNameByChainId(chainId || '')}
                     </div>
                     {chainId && (
                       <span className="bg-primary/10 text-primary rounded-full px-2 py-1 text-xs font-medium">
@@ -126,7 +113,7 @@ export default function MainPage() {
                         <option value="" disabled>
                           네트워크를 선택하세요
                         </option>
-                        {NETWORKS.map((network) => (
+                        {NETWORK_CONFIGS.map((network) => (
                           <option key={network.chainId} value={network.chainId}>
                             {network.name} ({network.symbol})
                           </option>

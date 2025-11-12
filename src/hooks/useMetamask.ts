@@ -7,11 +7,13 @@ import {
   Eip1193Provider,
   formatEther,
 } from 'ethers';
+import { getSymbolByChainId } from '@/utils/networks';
 
 interface MetamaskState {
   account: string | null;
   chainId: string | null;
   balance: string | null;
+  symbol: string | null;
   signature: string | null;
   signedMessage: string | null;
   isConnected: boolean;
@@ -46,6 +48,7 @@ export const useMetamask = (): UseMetamaskReturn => {
     account: null,
     chainId: null,
     balance: null,
+    symbol: null,
     signature: null,
     signedMessage: null,
     isConnected: false,
@@ -77,11 +80,35 @@ export const useMetamask = (): UseMetamaskReturn => {
   // 체인 변경 핸들러
   const handleChainChanged = useCallback(
     async (chainId: string) => {
-      setState((prev) => ({ ...prev, chainId }));
-      // 체인 변경 시 잔액 다시 조회
-      await refreshBalance();
+      try {
+        // 네트워크가 변경되면 provider를 다시 생성해야 함 (ethers.js v6 요구사항)
+        const provider = new BrowserProvider(window.ethereum as Eip1193Provider);
+        const accounts = await provider.send('eth_accounts', []);
+
+        if (accounts.length > 0) {
+          const balance = await provider.getBalance(accounts[0]);
+          const formattedBalance = formatEther(balance);
+          const signer = await provider.getSigner();
+          const symbol = getSymbolByChainId(chainId);
+
+          setState((prev) => ({
+            ...prev,
+            chainId,
+            balance: formattedBalance,
+            symbol,
+            provider,
+            signer,
+          }));
+        } else {
+          const symbol = getSymbolByChainId(chainId);
+          setState((prev) => ({ ...prev, chainId, symbol }));
+        }
+      } catch (error) {
+        console.error('Failed to update chain:', error);
+        setState((prev) => ({ ...prev, chainId }));
+      }
     },
-    [refreshBalance]
+    []
   );
 
   // 에러 메시지 포맷팅
@@ -155,6 +182,7 @@ export const useMetamask = (): UseMetamaskReturn => {
         account: null,
         chainId: null,
         balance: null,
+        symbol: null,
         signature: null,
         signedMessage: null,
         isConnected: false,
@@ -199,12 +227,15 @@ export const useMetamask = (): UseMetamaskReturn => {
       const signer = await provider.getSigner();
       const balance = await provider.getBalance(accounts[0]);
       const formattedBalance = formatEther(balance);
+      const chainIdHex = `0x${network.chainId.toString(16)}`;
+      const symbol = getSymbolByChainId(chainIdHex);
 
       // 상태 먼저 설정
       setState({
         account: accounts[0],
-        chainId: `0x${network.chainId.toString(16)}`,
+        chainId: chainIdHex,
         balance: formattedBalance,
+        symbol,
         signature: null,
         signedMessage: null,
         isConnected: true,
@@ -243,6 +274,7 @@ export const useMetamask = (): UseMetamaskReturn => {
       account: null,
       chainId: null,
       balance: null,
+      symbol: null,
       signature: null,
       signedMessage: null,
       isConnected: false,
@@ -326,11 +358,14 @@ export const useMetamask = (): UseMetamaskReturn => {
           const signer = await provider.getSigner();
           const balance = await provider.getBalance(accounts[0]);
           const formattedBalance = formatEther(balance);
+          const chainIdHex = `0x${network.chainId.toString(16)}`;
+          const symbol = getSymbolByChainId(chainIdHex);
 
           setState({
             account: accounts[0],
-            chainId: `0x${network.chainId.toString(16)}`,
+            chainId: chainIdHex,
             balance: formattedBalance,
+            symbol,
             signature: null,
             signedMessage: null,
             isConnected: true,
