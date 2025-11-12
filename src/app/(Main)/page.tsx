@@ -1,235 +1,247 @@
+'use client';
+
+import { useMetamask } from '@/hooks';
 import { Button } from '@/components/ui/button';
 import {
-  Code2,
-  Palette,
-  Zap,
-  Shield,
-  Smartphone,
-  Sparkles,
-} from 'lucide-react';
-import Link from 'next/link';
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 
-// Links Configuration
-const LINKS = {
-  getStarted: 'https://github.com/HongHyunKi/nextjs-shadcn-boilerplate',
-  github: 'https://github.com/HongHyunKi/nextjs-shadcn-boilerplate',
-  documentation: 'https://ui.shadcn.com/docs/components',
-} as const;
+// 네트워크 설정
+const NETWORKS = [
+  { chainId: '0x1', name: 'Ethereum Mainnet', symbol: 'ETH' },
+  { chainId: '0xaa36a7', name: 'Sepolia Testnet', symbol: 'SepoliaETH' },
+  { chainId: '0x89', name: 'Polygon Mainnet', symbol: 'MATIC' },
+  { chainId: '0x13882', name: 'Polygon Amoy Testnet', symbol: 'MATIC' },
+  { chainId: '0xa4b1', name: 'Arbitrum One', symbol: 'ETH' },
+  { chainId: '0xa4ba', name: 'Arbitrum Sepolia', symbol: 'ETH' },
+] as const;
 
 export default function MainPage() {
+  const {
+    account,
+    balance,
+    chainId,
+    signature,
+    signedMessage,
+    isConnected,
+    isLoading,
+    error,
+    connect,
+    disconnect,
+    refreshBalance,
+    signMessage,
+    clearError,
+    switchChain,
+  } = useMetamask();
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getNetworkName = (chainId: string | null) => {
+    if (!chainId) return 'Not connected';
+    const network = NETWORKS.find((n) => n.chainId === chainId);
+    return network ? network.name : `Unknown (${chainId})`;
+  };
+
   return (
-    <div className="w-full">
-      {/* Hero Section */}
-      <section className="relative flex min-h-[500px] w-full flex-col items-center justify-center overflow-hidden py-16 md:py-24 lg:min-h-[600px]">
-        {/* Gradient Background */}
-        <div className="from-primary/20 via-background to-background absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))]" />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+    <div className="flex min-h-[calc(100vh-200px)] w-full items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>MetaMask 지갑 연결</CardTitle>
+          <CardDescription>
+            MetaMask를 연결하여 지갑 정보를 확인하세요
+          </CardDescription>
+        </CardHeader>
 
-        {/* Content */}
-        <div className="container flex flex-col items-center gap-8 text-center">
-          <div className="bg-muted/50 inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-sm backdrop-blur-sm">
-            <Sparkles className="text-primary h-4 w-4" />
-            <span className="font-medium">Next.js 15 + Tailwind CSS v4</span>
-          </div>
-
-          <h1 className="from-foreground to-foreground/70 max-w-4xl bg-gradient-to-br bg-clip-text text-4xl font-extrabold tracking-tight text-transparent sm:text-5xl md:text-6xl lg:text-7xl">
-            Build Modern Web Apps
-            <br />
-            <span className="from-primary to-primary/60 bg-gradient-to-r bg-clip-text">
-              Faster Than Ever
-            </span>
-          </h1>
-
-          <p className="text-muted-foreground max-w-2xl text-base sm:text-lg md:text-xl">
-            A production-ready boilerplate with Next.js 15, Tailwind CSS v4,
-            shadcn/ui, and TypeScript. Start building beautiful, responsive web
-            applications today.
-          </p>
-
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <Button size="lg" className="gap-2 text-base" asChild>
-              <Link href={LINKS.getStarted}>
-                Get Started
-                <Zap className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-base" asChild>
-              <Link
-                href={LINKS.github}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Code2 className="h-4 w-4" />
-                View on GitHub
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="w-full py-16 md:py-24">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              Everything You Need
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl">
-              Built with modern tools and best practices to help you ship faster
-            </p>
-          </div>
-
-          <div className="mx-auto grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Feature 1 */}
-            <div className="group bg-card relative overflow-hidden rounded-lg border p-6 transition-all hover:shadow-lg">
-              <div className="bg-primary/10 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg">
-                <Zap className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Lightning Fast</h3>
-              <p className="text-muted-foreground text-sm">
-                Built on Next.js 15 with React Server Components for optimal
-                performance and SEO.
+        <CardContent className="space-y-4">
+          {!isConnected ? (
+            <div className="text-center">
+              <p className="text-muted-foreground mb-4 text-sm">
+                MetaMask가 설치되어 있어야 합니다
               </p>
             </div>
-
-            {/* Feature 2 */}
-            <div className="group bg-card relative overflow-hidden rounded-lg border p-6 transition-all hover:shadow-lg">
-              <div className="bg-primary/10 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg">
-                <Palette className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Beautiful UI</h3>
-              <p className="text-muted-foreground text-sm">
-                Pre-configured with shadcn/ui and Tailwind CSS v4 for stunning,
-                accessible components.
-              </p>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="group bg-card relative overflow-hidden rounded-lg border p-6 transition-all hover:shadow-lg">
-              <div className="bg-primary/10 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg">
-                <Code2 className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Type Safe</h3>
-              <p className="text-muted-foreground text-sm">
-                Full TypeScript support with strict mode enabled for
-                bullet-proof code.
-              </p>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="group bg-card relative overflow-hidden rounded-lg border p-6 transition-all hover:shadow-lg">
-              <div className="bg-primary/10 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg">
-                <Smartphone className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Fully Responsive</h3>
-              <p className="text-muted-foreground text-sm">
-                Mobile-first design that looks great on any device, from phones
-                to desktops.
-              </p>
-            </div>
-
-            {/* Feature 5 */}
-            <div className="group bg-card relative overflow-hidden rounded-lg border p-6 transition-all hover:shadow-lg">
-              <div className="bg-primary/10 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg">
-                <Shield className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Best Practices</h3>
-              <p className="text-muted-foreground text-sm">
-                ESLint, Prettier, and strict TypeScript configurations included
-                out of the box.
-              </p>
-            </div>
-
-            {/* Feature 6 */}
-            <div className="group bg-card relative overflow-hidden rounded-lg border p-6 transition-all hover:shadow-lg">
-              <div className="bg-primary/10 mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg">
-                <Sparkles className="text-primary h-6 w-6" />
-              </div>
-              <h3 className="mb-2 text-xl font-semibold">Dark Mode</h3>
-              <p className="text-muted-foreground text-sm">
-                Built-in dark mode support with next-themes and seamless theme
-                switching.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Tech Stack Section */}
-      <section className="bg-muted/30 w-full border-y py-16 md:py-24">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-              Powered by Modern Tech
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl">
-              Industry-leading tools and frameworks
-            </p>
-          </div>
-
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
-            {[
-              { name: 'Next.js 15', desc: 'React Framework' },
-              { name: 'React 19', desc: 'UI Library' },
-              { name: 'Tailwind v4', desc: 'CSS Framework' },
-              { name: 'TypeScript', desc: 'Type Safety' },
-              { name: 'shadcn/ui', desc: 'Components' },
-            ].map((tech, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center gap-2 text-center"
-              >
-                <div className="bg-background text-primary flex h-16 w-16 items-center justify-center rounded-xl border-2 font-bold">
-                  {tech.name.charAt(0)}
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-4">
+                <div className="text-muted-foreground mb-2 text-sm font-medium">
+                  연결된 주소
                 </div>
-                <div>
-                  <div className="font-semibold">{tech.name}</div>
-                  <div className="text-muted-foreground text-xs">
-                    {tech.desc}
+                <div className="font-mono text-sm">
+                  {formatAddress(account!)}
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <div className="text-muted-foreground mb-2 text-sm font-medium">
+                  잔액
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-2xl font-bold">
+                    {balance
+                      ? `${parseFloat(balance).toFixed(4)} ETH`
+                      : 'Loading...'}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={refreshBalance}>
+                    새로고침
+                  </Button>
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <div className="text-muted-foreground mb-2 text-sm font-medium">
+                  네트워크
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold">
+                      {getNetworkName(chainId)}
+                    </div>
+                    {chainId && (
+                      <span className="bg-primary/10 text-primary rounded-full px-2 py-1 text-xs font-medium">
+                        {chainId}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <label
+                      htmlFor="network-select"
+                      className="text-muted-foreground text-xs"
+                    >
+                      네트워크 변경
+                    </label>
+                    <div className="relative">
+                      <select
+                        id="network-select"
+                        value={chainId || ''}
+                        onChange={(e) => switchChain(e.target.value)}
+                        className="border-input bg-background ring-offset-background focus:ring-ring w-full appearance-none rounded-md border px-3 py-2 pr-10 text-sm focus:ring-2 focus:ring-offset-2 focus:outline-none"
+                      >
+                        <option value="" disabled>
+                          네트워크를 선택하세요
+                        </option>
+                        {NETWORKS.map((network) => (
+                          <option key={network.chainId} value={network.chainId}>
+                            {network.name} ({network.symbol})
+                          </option>
+                        ))}
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg
+                          className="h-4 w-4 text-muted-foreground"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="w-full py-16 md:py-24">
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="from-primary/10 via-primary/5 to-background relative overflow-hidden rounded-2xl border bg-gradient-to-br p-8 md:p-12">
-            <div className="relative z-10 flex flex-col items-center gap-6 text-center">
-              <h2 className="max-w-2xl text-3xl font-bold tracking-tight sm:text-4xl">
-                Ready to Start Building?
-              </h2>
-              <p className="text-muted-foreground max-w-xl">
-                Clone this boilerplate and start creating your next amazing
-                project in minutes.
-              </p>
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <Button size="lg" className="gap-2" asChild>
-                  <Link href={LINKS.documentation}>
-                    Explore Components
-                    <Sparkles className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link
-                    href={LINKS.github}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Star on GitHub
-                  </Link>
-                </Button>
+              <div className="rounded-lg border p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-muted-foreground text-sm font-medium">
+                    서명 상태
+                  </div>
+                  {signature && (
+                    <span className="text-xs text-green-600 dark:text-green-400">
+                      ✓ 서명 완료
+                    </span>
+                  )}
+                </div>
+                {signature ? (
+                  <div className="space-y-2">
+                    <div className="bg-muted max-h-32 overflow-y-auto rounded p-2">
+                      <p className="text-xs whitespace-pre-wrap">
+                        {signedMessage}
+                      </p>
+                    </div>
+                    <div className="text-muted-foreground text-xs">
+                      <span className="font-semibold">Signature:</span>
+                      <p className="mt-1 font-mono break-all">
+                        {signature.slice(0, 50)}...
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => signMessage()}
+                      className="w-full"
+                    >
+                      다시 서명하기
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-2 text-sm">
+                      서명이 없습니다
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => signMessage()}
+                      className="w-full"
+                    >
+                      서명하기
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
-            {/* Decorative gradient */}
-            <div className="bg-primary/20 absolute -top-20 -right-20 h-64 w-64 rounded-full blur-3xl" />
-            <div className="bg-primary/20 absolute -bottom-20 -left-20 h-64 w-64 rounded-full blur-3xl" />
-          </div>
-        </div>
-      </section>
+          )}
+
+          {error && (
+            <div className="border-destructive bg-destructive/10 text-destructive relative rounded-lg border p-3 pr-10 text-sm">
+              <div className="break-words">{error}</div>
+              <button
+                onClick={clearError}
+                className="absolute top-2 right-2 rounded-sm opacity-70 transition-opacity hover:opacity-100"
+                aria-label="에러 닫기"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          )}
+        </CardContent>
+
+        <CardFooter>
+          {!isConnected ? (
+            <Button className="w-full" onClick={connect} disabled={isLoading}>
+              {isLoading ? '연결 중...' : 'MetaMask 연결'}
+            </Button>
+          ) : (
+            <Button className="w-full" variant="outline" onClick={disconnect}>
+              연결 해제
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
     </div>
   );
 }

@@ -3,7 +3,4 @@ export interface NavItem {
   href: string;
 }
 
-export const NAV_LIST: NavItem[] = [
-  { name: 'Home', href: '/' },
-  { name: 'Typography', href: '/typography' },
-];
+export const NAV_LIST: NavItem[] = [{ name: 'Home', href: '/' }];
