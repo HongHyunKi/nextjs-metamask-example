@@ -14,11 +14,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { ethers } from 'ethers';
 
 export default function TokenPage() {
   const { account, provider, isConnected } = useMetamask();
   const [tokenAddress, setTokenAddress] = useState('');
   const [searchAddress, setSearchAddress] = useState('');
+  /** 토큰 전송 */
+  const [recipientAddress, setRecipientAddress] = useState('');
+  const [transferAmount, setTransferAmount] = useState('');
+  const [isTransferring, setIsTransferring] = useState(false);
+  const [transferError, setTransferError] = useState('');
+  const [transferSuccess, setTransferSuccess] = useState('');
 
   const erc20Token = useERC20Token(searchAddress, provider, account, true);
 
@@ -29,6 +36,51 @@ export default function TokenPage() {
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleSearch();
+    }
+  };
+
+  const handleTransfer = async () => {
+    if (!provider || !account || !searchAddress || !recipientAddress || !transferAmount) {
+      return;
+    }
+
+    setIsTransferring(true);
+    setTransferError('');
+    setTransferSuccess('');
+
+    try {
+      // ERC20 ABI - transfer 메서드만 필요
+      const erc20Abi = [
+        'function transfer(address to, uint256 amount) returns (bool)',
+      ];
+
+      // Signer 가져오기
+      const signer = await provider.getSigner();
+
+      // 컨트랙트 인스턴스 생성
+      const tokenContract = new ethers.Contract(searchAddress, erc20Abi, signer);
+
+      // 금액을 토큰의 decimals에 맞게 변환
+      const decimals = erc20Token.decimals || 18;
+      const amount = ethers.parseUnits(transferAmount, decimals);
+
+      // transfer 메서드 호출
+      const tx = await tokenContract.transfer(recipientAddress, amount);
+
+      // 트랜잭션 대기
+      await tx.wait();
+
+      setTransferSuccess(`${transferAmount} ${erc20Token.symbol || 'tokens'} 전송 완료!`);
+      setRecipientAddress('');
+      setTransferAmount('');
+
+      // 잔액 새로고침
+      erc20Token.refreshBalance();
+    } catch (error: any) {
+      console.error('Transfer error:', error);
+      setTransferError(error.message || '전송 중 오류가 발생했습니다.');
+    } finally {
+      setIsTransferring(false);
     }
   };
 
@@ -179,6 +231,67 @@ export default function TokenPage() {
                   </div>
                 )}
               </div>
+
+              {/* 토큰 전송 섹션 */}
+              {searchAddress && !erc20Token.error && !erc20Token.isLoading && (
+                <div className="rounded-lg border p-4">
+                  <div className="mb-3 text-sm font-medium text-muted-foreground">
+                    토큰 전송
+                  </div>
+
+                  {transferSuccess && (
+                    <div className="mb-3 rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                      {transferSuccess}
+                    </div>
+                  )}
+
+                  {transferError && (
+                    <div className="mb-3 rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-900/20 dark:text-red-400">
+                      {transferError}
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="recipient-address">받는 주소</Label>
+                      <Input
+                        id="recipient-address"
+                        placeholder="0x..."
+                        value={recipientAddress}
+                        onChange={(e) => setRecipientAddress(e.target.value)}
+                        className="font-mono text-sm"
+                        disabled={isTransferring}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="transfer-amount">전송 금액</Label>
+                      <Input
+                        id="transfer-amount"
+                        type="number"
+                        placeholder="0.0"
+                        value={transferAmount}
+                        onChange={(e) => setTransferAmount(e.target.value)}
+                        className="text-sm"
+                        disabled={isTransferring}
+                      />
+                    </div>
+
+                    <Button
+                      onClick={handleTransfer}
+                      disabled={
+                        !recipientAddress.trim() ||
+                        !transferAmount ||
+                        isTransferring ||
+                        parseFloat(transferAmount) <= 0
+                      }
+                      className="w-full"
+                    >
+                      {isTransferring ? '전송 중...' : '전송'}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </>
           )}
         </CardContent>
