@@ -343,7 +343,7 @@ export const useMetamask = (): UseMetamaskReturn => {
   useEffect(() => {
     if (typeof window === 'undefined' || !window.ethereum) return;
 
-    const ethereum = window.ethereum;
+    const ethereum = window.ethereum!;
 
     ethereum.on('chainChanged', handleChainChanged);
     ethereum.on('accountsChanged', handleAccountsChanged);
