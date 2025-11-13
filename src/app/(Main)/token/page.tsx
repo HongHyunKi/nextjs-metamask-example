@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useMetamask } from '@/hooks';
 import { useERC20Token } from '@/hooks/useERC20Token';
+import { getTransactionUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,7 +18,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ethers } from 'ethers';
 
 export default function TokenPage() {
-  const { account, provider, isConnected } = useMetamask();
+  const { account, provider, isConnected, chainId } = useMetamask();
   const [tokenAddress, setTokenAddress] = useState('');
   const [searchAddress, setSearchAddress] = useState('');
   /** 토큰 전송 */
@@ -26,6 +27,7 @@ export default function TokenPage() {
   const [isTransferring, setIsTransferring] = useState(false);
   const [transferError, setTransferError] = useState('');
   const [transferSuccess, setTransferSuccess] = useState('');
+  const [txHash, setTxHash] = useState('');
 
   const erc20Token = useERC20Token(searchAddress, provider, account, true);
 
@@ -47,6 +49,7 @@ export default function TokenPage() {
     setIsTransferring(true);
     setTransferError('');
     setTransferSuccess('');
+    setTxHash('');
 
     try {
       // ERC20 ABI - transfer 메서드만 필요
@@ -67,6 +70,9 @@ export default function TokenPage() {
       // transfer 메서드 호출
       const tx = await tokenContract.transfer(recipientAddress, amount);
 
+      // 트랜잭션 해시 저장
+      setTxHash(tx.hash);
+
       // 트랜잭션 대기
       await tx.wait();
 
@@ -75,7 +81,7 @@ export default function TokenPage() {
       setTransferAmount('');
 
       // 잔액 새로고침
-      erc20Token.refreshBalance();
+      await erc20Token.refreshBalance();
     } catch (error: any) {
       console.error('Transfer error:', error);
       setTransferError(error.message || '전송 중 오류가 발생했습니다.');
@@ -240,8 +246,26 @@ export default function TokenPage() {
                   </div>
 
                   {transferSuccess && (
-                    <div className="mb-3 rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                      {transferSuccess}
+                    <div className="mb-3 space-y-2 rounded-md bg-green-50 p-3 text-sm text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                      <div>{transferSuccess}</div>
+                      {txHash && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs">TX:</span>
+                          <code className="text-xs font-mono">
+                            {txHash.slice(0, 10)}...{txHash.slice(-8)}
+                          </code>
+                          {getTransactionUrl(txHash, chainId) && (
+                            <a
+                              href={getTransactionUrl(txHash, chainId) || ''}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs underline hover:no-underline"
+                            >
+                              블록 탐색기 보기
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
 
