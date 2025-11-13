@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { NETWORK_CONFIGS } from '@/constants/networks';
 import { formatAddress, getNetworkNameByChainId } from '@/utils';
 
@@ -43,7 +44,42 @@ export default function MainPage() {
         </CardHeader>
 
         <CardContent className="min-h-[400px] space-y-4">
-          {!isConnected ? (
+          {isLoading ? (
+            <div className="space-y-4">
+              <div className="rounded-lg border p-4">
+                <Skeleton className="mb-2 h-4 w-24" />
+                <Skeleton className="h-5 w-40" />
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <Skeleton className="mb-2 h-4 w-16" />
+                <div className="flex items-center justify-between">
+                  <Skeleton className="h-8 w-48" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <Skeleton className="mb-2 h-4 w-20" />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-5 w-32" />
+                    <Skeleton className="h-6 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              </div>
+
+              <div className="rounded-lg border p-4">
+                <Skeleton className="mb-2 h-4 w-20" />
+                <div className="space-y-2">
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-3/4" />
+                </div>
+              </div>
+            </div>
+          ) : !isConnected ? (
             <div className="flex min-h-[350px] items-center justify-center text-center">
               <p className="text-muted-foreground text-sm">
                 MetaMask가 설치되어 있어야 합니다
@@ -65,11 +101,13 @@ export default function MainPage() {
                   잔액
                 </div>
                 <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">
-                    {balance
-                      ? `${parseFloat(balance).toFixed(4)} ${symbol || 'ETH'}`
-                      : 'Loading...'}
-                  </div>
+                  {balance ? (
+                    <div className="text-2xl font-bold">
+                      {`${parseFloat(balance).toFixed(4)} ${symbol || 'ETH'}`}
+                    </div>
+                  ) : (
+                    <Skeleton className="h-8 w-48" />
+                  )}
                   <Button variant="outline" size="sm" onClick={refreshBalance}>
                     새로고침
                   </Button>

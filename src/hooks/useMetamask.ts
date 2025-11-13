@@ -231,7 +231,12 @@ export const useMetamask = (): UseMetamaskReturn => {
       const chainIdHex = `0x${network.chainId.toString(16)}`;
       const symbol = getSymbolByChainId(chainIdHex);
 
-      // 상태 먼저 설정
+      // 연결 성공 시 localStorage에서 연결 해제 플래그 제거
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('metamask_disconnected');
+      }
+
+      // 상태 먼저 설정 (isLoading은 true 유지)
       setState({
         account: accounts[0],
         chainId: chainIdHex,
@@ -240,7 +245,7 @@ export const useMetamask = (): UseMetamaskReturn => {
         signature: null,
         signedMessage: null,
         isConnected: true,
-        isLoading: false,
+        isLoading: true, // 서명 완료까지 로딩 유지
         error: null,
         provider,
         signer,
@@ -256,6 +261,7 @@ export const useMetamask = (): UseMetamaskReturn => {
         ...prev,
         signature,
         signedMessage: message,
+        isLoading: false, // 서명 완료 후 로딩 종료
       }));
     } catch (error) {
       // 서명을 거부한 경우는 연결 상태는 유지
@@ -271,6 +277,11 @@ export const useMetamask = (): UseMetamaskReturn => {
 
   // 메타마스크 연결 해제
   const disconnect = useCallback(() => {
+    // localStorage에 연결 해제 플래그 저장
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('metamask_disconnected', 'true');
+    }
+
     setState({
       account: null,
       chainId: null,
@@ -348,6 +359,17 @@ export const useMetamask = (): UseMetamaskReturn => {
     const checkConnection = async () => {
       if (!checkMetamaskInstalled()) return;
 
+      // 사용자가 의도적으로 연결 해제한 경우 자동 연결하지 않음
+      if (typeof window !== 'undefined') {
+        const isDisconnected = localStorage.getItem('metamask_disconnected');
+        if (isDisconnected === 'true') {
+          setState((prev) => ({ ...prev, isLoading: false }));
+          return;
+        }
+      }
+
+      setState((prev) => ({ ...prev, isLoading: true }));
+
       try {
         const provider = new BrowserProvider(
           window.ethereum as Eip1193Provider
@@ -375,9 +397,12 @@ export const useMetamask = (): UseMetamaskReturn => {
             provider,
             signer,
           });
+        } else {
+          setState((prev) => ({ ...prev, isLoading: false }));
         }
       } catch (error) {
         console.error('Failed to check connection:', error);
+        setState((prev) => ({ ...prev, isLoading: false }));
       }
     };
 
