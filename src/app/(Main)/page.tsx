@@ -1,7 +1,6 @@
 'use client';
 
 import { useMetamask } from '@/hooks';
-import { useERC20Token } from '@/hooks/useERC20Token';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -13,9 +12,6 @@ import {
 } from '@/components/ui/card';
 import { NETWORK_CONFIGS } from '@/constants/networks';
 import { formatAddress, getNetworkNameByChainId } from '@/utils';
-
-// 배포된 스마트 컨트랙트 주소
-const ERC20_TOKEN_ADDRESS = '';
 
 export default function MainPage() {
   const {
@@ -34,15 +30,7 @@ export default function MainPage() {
     signMessage,
     clearError,
     switchChain,
-    provider,
   } = useMetamask();
-
-  const erc20Token = useERC20Token(
-    ERC20_TOKEN_ADDRESS,
-    provider,
-    account,
-    true // 자동 새로고침
-  );
 
   return (
     <div className="flex min-h-[calc(100vh-200px)] w-full items-center justify-center p-4">
@@ -144,41 +132,6 @@ export default function MainPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/** ERC-20 토큰 */}
-              <div className="rounded-lg border p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-muted-foreground text-sm font-medium">
-                    ERC-20 토큰 잔액
-                  </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-2xl font-bold">
-                    {erc20Token.isLoading ? (
-                      'Loading...'
-                    ) : erc20Token.error ? (
-                      <span className="text-destructive text-sm">
-                        {erc20Token.error}
-                      </span>
-                    ) : (
-                      `${erc20Token.balance ? parseFloat(erc20Token.balance).toFixed(4) : '0.0000'} ${erc20Token.symbol || ''}`
-                    )}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={erc20Token.refreshBalance}
-                    disabled={erc20Token.isLoading}
-                  >
-                    새로고침
-                  </Button>
-                </div>
-                {erc20Token.name && (
-                  <div className="text-muted-foreground mt-2 text-xs">
-                    {erc20Token.name}
-                  </div>
-                )}
               </div>
 
               <div className="rounded-lg border p-4">

@@ -3,4 +3,7 @@ export interface NavItem {
   href: string;
 }
 
-export const NAV_LIST: NavItem[] = [{ name: 'Home', href: '/' }];
+export const NAV_LIST: NavItem[] = [
+  { name: 'MetaMask', href: '/' },
+  { name: 'ERC-20 Token', href: '/token' },
+];

@@ -51,7 +51,20 @@ export const useERC20Token = (
   });
 
   const refreshBalance = useCallback(async () => {
-    if (!provider || !account || !tokenAddress) {
+    // 토큰 주소가 비어있으면 초기 상태로 유지
+    if (!tokenAddress || tokenAddress.trim() === '') {
+      setState({
+        balance: null,
+        symbol: null,
+        decimals: null,
+        name: null,
+        isLoading: false,
+        error: null,
+      });
+      return;
+    }
+
+    if (!provider || !account) {
       return;
     }
 
@@ -77,16 +90,33 @@ export const useERC20Token = (
         isLoading: false,
         error: null,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch ERC20 token info:', error);
-      setState((prev) => ({
-        ...prev,
+
+      // 에러 메시지 포맷팅
+      let errorMessage = '토큰 정보를 가져오는데 실패했습니다.';
+
+      // BAD_DATA 에러 = 네트워크에 컨트랙트가 없음
+      if (error?.code === 'BAD_DATA' || error?.message?.includes('could not decode')) {
+        errorMessage = '현재 네트워크에 해당 토큰이 존재하지 않습니다.';
+      }
+      // INVALID_ARGUMENT = 잘못된 주소
+      else if (error?.code === 'INVALID_ARGUMENT') {
+        errorMessage = '유효하지 않은 토큰 주소입니다.';
+      }
+      // 기타 에러
+      else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      setState({
+        balance: null,
+        symbol: null,
+        decimals: null,
+        name: null,
         isLoading: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : '토큰 정보를 가져오는데 실패했습니다.',
-      }));
+        error: errorMessage,
+      });
     }
   }, [provider, account, tokenAddress]);
 

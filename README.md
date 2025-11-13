@@ -76,7 +76,9 @@ yarn start
 src/
 ├── app/                 # Next.js App Router
 │   ├── (Main)/          # 메인 레이아웃 그룹
-│   │   └── page.tsx     # MetaMask 연동 UI
+│   │   ├── page.tsx     # MetaMask 연동 UI
+│   │   └── token/       # ERC20 토큰 조회
+│   │       └── page.tsx # 토큰 주소 입력 및 조회 UI
 │   └── layout.tsx       # 루트 레이아웃
 ├── components/          # React 컴포넌트
 │   ├── ui/              # shadcn/ui 컴포넌트
@@ -120,6 +122,18 @@ yarn prettier   # Prettier 검사
 - 연결 시 자동으로 서명 요청이 표시됩니다
 - "서명하기" 버튼으로 수동 서명도 가능합니다
 
+### 5. ERC20 토큰 조회
+1. `/token` 페이지로 이동
+2. MetaMask가 연결되어 있는지 확인
+3. 토큰 컨트랙트 주소 입력
+   - 예시: `0x4b34dd1d58B2915eE0414b1870C027095893F7dB`
+4. "조회" 버튼 클릭 또는 Enter 키 입력
+5. 토큰 정보 확인:
+   - 토큰 이름
+   - 심볼
+   - 소수점 자리수
+   - 보유 잔액
+
 ## 🔧 커스텀 훅: useMetamask
 
 ```typescript
@@ -147,29 +161,22 @@ const {
 
 ERC20 토큰의 잔액과 정보를 조회하는 범용 훅입니다. 네이티브 토큰(ETH, AVAX 등)이 아닌 컨트랙트 기반 토큰을 다룰 때 사용합니다.
 
-### 설정 방법
+### 페이지에서 사용
 
-1. **토큰 컨트랙트 주소 설정**
+`/token` 페이지에서 이 훅을 사용하여 ERC20 토큰 정보를 조회합니다:
 
-   `src/app/(Main)/page.tsx` 파일에서 ERC20_TOKEN_ADDRESS 상수를 설정합니다:
+```typescript
+// src/app/(Main)/token/page.tsx
+const { account, provider } = useMetamask();
+const [tokenAddress, setTokenAddress] = useState('');
 
-   ```typescript
-   // 배포된 스마트 컨트랙트 주소
-   const ERC20_TOKEN_ADDRESS = '0x4b ... ';
-   ```
-
-2. **훅 사용**
-
-   ```typescript
-   import { useERC20Token } from '@/hooks/useERC20Token';
-
-   const erc20Token = useERC20Token(
-     ERC20_TOKEN_ADDRESS, // 토큰 컨트랙트 주소
-     provider,            // useMetamask에서 가져온 provider
-     account,             // useMetamask에서 가져온 account
-     true                 // 자동 새로고침 활성화 (선택)
-   );
-   ```
+const erc20Token = useERC20Token(
+  tokenAddress,  // 사용자가 입력한 토큰 주소
+  provider,      // useMetamask에서 가져온 provider
+  account,       // useMetamask에서 가져온 account
+  true           // 자동 새로고침 활성화
+);
+```
 
 ### 반환값
 
@@ -187,8 +194,10 @@ const {
 
 ### 주요 기능
 
-- **자동 새로고침**: 메타마스크 연결, 계정 변경 시 자동으로 토큰 정보 업데이트
+- **자동 새로고침**: 메타마스크 연결, 계정 변경, 주소 변경 시 자동으로 토큰 정보 업데이트
 - **수동 새로고침**: `refreshBalance()` 함수로 언제든 최신 정보 조회
-- **에러 처리**: 토큰 조회 실패 시 에러 메시지 제공
+- **에러 처리**:
+  - 네트워크 불일치: "현재 네트워크에 해당 토큰이 존재하지 않습니다."
+  - 잘못된 주소: "유효하지 않은 토큰 주소입니다."
 - **로딩 상태**: 데이터 로딩 중 UI 처리 가능
 - **범용성**: 모든 ERC20 표준 토큰에 사용 가능
