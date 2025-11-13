@@ -7,7 +7,7 @@ import {
   Eip1193Provider,
   formatEther,
 } from 'ethers';
-import { getSymbolByChainId } from '@/utils/networks';
+import { getSymbolByChainId } from '@/utils';
 
 interface MetamaskState {
   account: string | null;
@@ -32,7 +32,10 @@ interface UseMetamaskReturn extends MetamaskState {
   clearError: () => void;
 }
 
-const createSignMessage = (account: string, timestamp: string) => `Welcome to MetaMask!
+const createSignMessage = (
+  account: string,
+  timestamp: string
+) => `Welcome to MetaMask!
 
 이 서명 요청은 블록체인 트랜잭션을 발생시키지 않으며,
 가스비가 들지 않습니다.
@@ -78,38 +81,35 @@ export const useMetamask = (): UseMetamaskReturn => {
   }, [state.provider, state.account]);
 
   // 체인 변경 핸들러
-  const handleChainChanged = useCallback(
-    async (chainId: string) => {
-      try {
-        // 네트워크가 변경되면 provider를 다시 생성해야 함 (ethers.js v6 요구사항)
-        const provider = new BrowserProvider(window.ethereum as Eip1193Provider);
-        const accounts = await provider.send('eth_accounts', []);
+  const handleChainChanged = useCallback(async (chainId: string) => {
+    try {
+      // 네트워크가 변경되면 provider를 다시 생성해야 함 (ethers.js v6 요구사항)
+      const provider = new BrowserProvider(window.ethereum as Eip1193Provider);
+      const accounts = await provider.send('eth_accounts', []);
 
-        if (accounts.length > 0) {
-          const balance = await provider.getBalance(accounts[0]);
-          const formattedBalance = formatEther(balance);
-          const signer = await provider.getSigner();
-          const symbol = getSymbolByChainId(chainId);
+      if (accounts.length > 0) {
+        const balance = await provider.getBalance(accounts[0]);
+        const formattedBalance = formatEther(balance);
+        const signer = await provider.getSigner();
+        const symbol = getSymbolByChainId(chainId);
 
-          setState((prev) => ({
-            ...prev,
-            chainId,
-            balance: formattedBalance,
-            symbol,
-            provider,
-            signer,
-          }));
-        } else {
-          const symbol = getSymbolByChainId(chainId);
-          setState((prev) => ({ ...prev, chainId, symbol }));
-        }
-      } catch (error) {
-        console.error('Failed to update chain:', error);
-        setState((prev) => ({ ...prev, chainId }));
+        setState((prev) => ({
+          ...prev,
+          chainId,
+          balance: formattedBalance,
+          symbol,
+          provider,
+          signer,
+        }));
+      } else {
+        const symbol = getSymbolByChainId(chainId);
+        setState((prev) => ({ ...prev, chainId, symbol }));
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error('Failed to update chain:', error);
+      setState((prev) => ({ ...prev, chainId }));
+    }
+  }, []);
 
   // 에러 메시지 포맷팅
   const formatError = (error: any): string => {
@@ -154,7 +154,8 @@ export const useMetamask = (): UseMetamaskReturn => {
 
       try {
         const timestamp = new Date().toISOString();
-        const message = customMessage || createSignMessage(state.account, timestamp);
+        const message =
+          customMessage || createSignMessage(state.account, timestamp);
 
         const signature = await state.signer.signMessage(message);
 
