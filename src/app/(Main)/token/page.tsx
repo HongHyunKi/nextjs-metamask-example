@@ -79,15 +79,20 @@ export default function TokenPage() {
                 </p>
               </div>
 
-              {searchAddress && (
-                <div className="rounded-lg border p-4">
-                  <div className="mb-2 flex items-center justify-between">
-                    <div className="text-muted-foreground text-sm font-medium">
-                      토큰 정보
-                    </div>
+              <div className="rounded-lg border p-4 min-h-[300px]">
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-muted-foreground text-sm font-medium">
+                    토큰 정보
                   </div>
+                </div>
 
-                  {erc20Token.isLoading ? (
+                {!searchAddress ? (
+                  <div className="text-center py-4 flex items-center justify-center min-h-[250px]">
+                    <p className="text-muted-foreground text-sm">
+                      토큰 주소를 입력하고 조회 버튼을 클릭하세요
+                    </p>
+                  </div>
+                ) : erc20Token.isLoading ? (
                     <div className="text-center py-4">
                       <p className="text-muted-foreground text-sm">
                         토큰 정보를 불러오는 중...
@@ -156,8 +161,7 @@ export default function TokenPage() {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
+              </div>
             </>
           )}
         </CardContent>

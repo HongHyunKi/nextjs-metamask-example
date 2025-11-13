@@ -42,10 +42,10 @@ export default function MainPage() {
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className="min-h-[400px] space-y-4">
           {!isConnected ? (
-            <div className="text-center">
-              <p className="text-muted-foreground mb-4 text-sm">
+            <div className="flex min-h-[350px] items-center justify-center text-center">
+              <p className="text-muted-foreground text-sm">
                 MetaMask가 설치되어 있어야 합니다
               </p>
             </div>
@@ -213,16 +213,19 @@ export default function MainPage() {
           )}
         </CardContent>
 
-        <CardFooter>
-          {!isConnected ? (
-            <Button className="w-full" onClick={connect} disabled={isLoading}>
-              {isLoading ? '연결 중...' : 'MetaMask 연결'}
-            </Button>
-          ) : (
-            <Button className="w-full" variant="outline" onClick={disconnect}>
-              연결 해제
-            </Button>
-          )}
+        <CardFooter className="pt-6">
+          <Button
+            className="min-h-[40px] w-full"
+            onClick={isConnected ? disconnect : connect}
+            disabled={isLoading}
+            suppressHydrationWarning
+          >
+            {isLoading
+              ? '연결 중...'
+              : isConnected
+                ? '연결 해제'
+                : 'MetaMask 연결'}
+          </Button>
         </CardFooter>
       </Card>
     </div>
